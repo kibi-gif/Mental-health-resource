@@ -26,39 +26,13 @@
         <section id="statistics" class="content-section">
             <h2>Understanding Mental Health</h2>
             <p class="subtitle">You are not alone. Here is what the data says.</p>
-            <div class="card-grid">
-                <div class="card" data-id="stat-1">
-                    <div class="card-visual">📊</div>
-                    <h3>Prevalence</h3>
-                    <p>1 in 5 adults experience mental illness each year. It is as common as many physical ailments.</p>
-                    <button class="bookmark-btn" onclick="toggleBookmark('stat-1', 'Prevalence (Stat)', '1 in 5 adults experience mental illness...')">Bookmark</button>
-                </div>
-                <div class="card" data-id="stat-2">
-                    <div class="card-visual">📈</div>
-                    <h3>Treatment Efficacy</h3>
-                    <p>Between 70% and 90% of individuals have a significant reduction of symptoms with proper support and treatment.</p>
-                    <button class="bookmark-btn" onclick="toggleBookmark('stat-2', 'Treatment Efficacy (Stat)', '70-90% see significant reduction in symptoms.')">Bookmark</button>
-                </div>
-            </div>
+            <div class="card-grid" id="stats-grid"></div>
         </section>
 
         <section id="resources" class="content-section">
             <h2>Available Resources</h2>
             <p class="subtitle">Different paths for different needs. Explore what feels right.</p>
-            <div class="card-grid">
-                <div class="card" data-id="res-1">
-                    <div class="card-visual">📱</div>
-                    <h3>Text-Based Support</h3>
-                    <p>Crisis Text Line: Text HOME to 741741 for free, 24/7 crisis counseling.</p>
-                    <button class="bookmark-btn" onclick="toggleBookmark('res-1', 'Crisis Text Line (Resource)', 'Text HOME to 741741')">Bookmark</button>
-                </div>
-                <div class="card" data-id="res-2">
-                    <div class="card-visual">💻</div>
-                    <h3>Online Therapy Directories</h3>
-                    <p>Psychology Today offers a comprehensive directory to find therapists offering various modalities, including gentle and self-guided approaches.</p>
-                    <button class="bookmark-btn" onclick="toggleBookmark('res-2', 'Psychology Today (Resource)', 'Directory for gentle/self-guided therapy')">Bookmark</button>
-                </div>
-            </div>
+            <div class="card-grid" id="resources-grid"></div>
         </section>
     </main>
 
@@ -77,8 +51,7 @@
         <div class="modal-content">
             <span class="close-btn-bm">&times;</span>
             <h2>Your Saved Items</h2>
-            <div id="bookmarks-list">
-                </div>
+            <div id="bookmarks-list"></div>
         </div>
     </div>
 
