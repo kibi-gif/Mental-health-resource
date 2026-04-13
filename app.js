@@ -1,23 +1,4 @@
-// ════════════════════════════════════════════
-//  CARD DATA
-//  Add summary field to each card for the
-//  expanded detail modal.
-// ════════════════════════════════════════════
-// ════════════════════════════════════════════
-//  SUPABASE CONFIGURATION
-// ════════════════════════════════════════════
-const supabaseUrl = 'YOUR_SUPABASE_URL'; 
-const supabaseKey = 'YOUR_SUPABASE_ANON_KEY';
-const { createClient } = window['@supabase/supabase-js'];
-const supabase = createClient(supabaseUrl, supabaseKey);
-
-// ════════════════════════════════════════════
-//  DATA & STATE
-// ════════════════════════════════════════════
-let currentUser = null;
-
-// (Keep your statsCards and resourceCards arrays here exactly as they were)
-  {
+ {
         id: 'stat-1',
         icon: '📊',
         title: 'Prevalence',
@@ -125,6 +106,26 @@ const resourceCards = [
         source: 'https://www.helpguide.org/'
     }
 ];
+// ════════════════════════════════════════════
+//  CARD DATA
+//  Add summary field to each card for the
+//  expanded detail modal.
+// ════════════════════════════════════════════
+// ════════════════════════════════════════════
+//  SUPABASE CONFIGURATION
+// ════════════════════════════════════════════
+const supabaseUrl = 'YOUR_SUPABASE_URL'; 
+const supabaseKey = 'YOUR_SUPABASE_ANON_KEY';
+const { createClient } = window['@supabase/supabase-js'];
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+// ════════════════════════════════════════════
+//  DATA & STATE
+// ════════════════════════════════════════════
+let currentUser = null;
+
+// (Keep your statsCards and resourceCards arrays here exactly as they were)
+ 
 // ════════════════════════════════════════════
 //  CORE INITIALIZATION
 // ════════════════════════════════════════════
