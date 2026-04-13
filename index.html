@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pathfinder | Mental Health Resources</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <!-- HEADER -->
+    <header>
+        <div class="logo">Pathfinder</div>
+        <nav>
+            <a href="#statistics">Understand</a>
+            <a href="#resources">Explore Resources</a>
+            <a href="#" id="auth-nav-btn">Sign In / Register</a>
+            <a href="#" id="bookmarks-nav-btn" class="hidden">My Bookmarks</a>
+        </nav>
+    </header>
+
+    <!-- MAIN -->
+    <main>
+        <section class="hero">
+            <h1>Explore at your own pace.</h1>
+            <p>Information and resources for your mental well-being, gathered in one place. No pressure, just options.</p>
+        </section>
+
+        <section id="statistics" class="content-section">
+            <h2>Understanding Mental Health</h2>
+            <p class="subtitle" id="alone-subtitle">You are not alone. Here is what the data says.</p>
+            <div class="card-grid" id="stats-grid"></div>
+        </section>
+
+        <section id="resources" class="content-section">
+            <h2>Available Resources</h2>
+            <p class="subtitle">Different paths for different needs. Explore what feels right.</p>
+            <div class="card-grid" id="resources-grid"></div>
+        </section>
+    </main>
+
+    <!-- AUTH MODAL -->
+    <div id="auth-modal" class="modal">
+        <div class="modal-content auth-modal-content">
+            <button class="close-x" id="auth-close-btn">&times;</button>
+
+            <!-- Sign-in / Register view -->
+            <div id="auth-signin-view">
+                <h2 id="auth-title">Create Account or Sign In</h2>
+                <p class="modal-subtitle">Save resources and receive updates on your own terms.</p>
+                <div class="field-group">
+                    <input type="text"     id="username" placeholder="Username" autocomplete="username">
+                    <input type="email"    id="email"    placeholder="Email address" autocomplete="email">
+                    <input type="password" id="password" placeholder="Password (min 6 chars)" autocomplete="current-password">
+                </div>
+                <label class="consent-label">
+                    <input type="checkbox" id="email-consent">
+                    <span>I'd like to receive card info by email when I request it.</span>
+                </label>
+                <p class="field-error hidden" id="auth-error"></p>
+                <button id="login-btn" class="btn-primary btn-full">Continue</button>
+            </div>
+
+            <!-- Logged-in / manage view -->
+            <div id="auth-manage-view" class="hidden">
+                <h2>Account</h2>
+                <p class="modal-subtitle" id="manage-greeting"></p>
+                <label class="consent-label" id="manage-consent-label">
+                    <input type="checkbox" id="manage-email-consent">
+                    <span>Send me card info by email when I request it.</span>
+                </label>
+                <button id="save-prefs-btn" class="btn-secondary btn-full">Save Preference</button>
+                <button id="logout-btn" class="btn-ghost btn-full">Sign Out</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- BOOKMARKS MODAL -->
+    <div id="bookmarks-modal" class="modal">
+        <div class="modal-content bookmarks-modal-content">
+            <button class="close-x" id="bm-close-btn">&times;</button>
+            <h2>Your Saved Items</h2>
+            <p class="modal-subtitle">Click any item to open its full details.</p>
+            <div id="bookmarks-list"></div>
+        </div>
+    </div>
+
+    <!-- CARD DETAIL MODAL -->
+    <div id="card-modal" class="modal">
+        <div class="modal-content card-modal-content">
+            <button class="close-x" id="card-close-btn">&times;</button>
+            <div class="cm-icon" id="cm-icon"></div>
+            <h2 id="cm-title"></h2>
+            <p class="cm-description" id="cm-description"></p>
+            <div class="cm-divider"></div>
+            <p class="cm-summary-label">Summary</p>
+            <p class="cm-summary-text" id="cm-summary"></p>
+            <div class="cm-actions">
+                <a id="cm-source-btn" href="#" target="_blank" rel="noopener noreferrer" class="btn-outline">View Full Source ↗</a>
+                <button id="cm-bookmark-btn" class="btn-secondary">Bookmark</button>
+                <button id="cm-email-btn" class="btn-email hidden">✉ Email Me This</button>
+            </div>
+            <p class="cm-email-status hidden" id="cm-email-status"></p>
+        </div>
+    </div>
+
+    <!-- TOAST -->
+    <div id="toast" class="toast hidden"><span id="toast-msg"></span></div>
+
+    <script src="app.js"></script>
+</body>
+</html>
