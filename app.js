@@ -3,7 +3,9 @@
 //  Add summary field to each card for the
 //  expanded detail modal.
 // ════════════════════════════════════════════
-
+const supabaseUrl = 'YOUR_SUPABASE_URL';
+const supabaseKey = 'YOUR_SUPABASE_ANON_KEY';
+const supabase = supabase.createClient(supabaseUrl, supabaseKey);
 const statsCards = [
     {
         id: 'stat-1',
