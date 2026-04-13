@@ -3,11 +3,21 @@
 //  Add summary field to each card for the
 //  expanded detail modal.
 // ════════════════════════════════════════════
-const supabaseUrl = 'YOUR_SUPABASE_URL';
+// ════════════════════════════════════════════
+//  SUPABASE CONFIGURATION
+// ════════════════════════════════════════════
+const supabaseUrl = 'YOUR_SUPABASE_URL'; 
 const supabaseKey = 'YOUR_SUPABASE_ANON_KEY';
-const supabase = supabase.createClient(supabaseUrl, supabaseKey);
-const statsCards = [
-    {
+const { createClient } = window['@supabase/supabase-js'];
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+// ════════════════════════════════════════════
+//  DATA & STATE
+// ════════════════════════════════════════════
+let currentUser = null;
+
+// (Keep your statsCards and resourceCards arrays here exactly as they were)
+  {
         id: 'stat-1',
         icon: '📊',
         title: 'Prevalence',
@@ -115,478 +125,119 @@ const resourceCards = [
         source: 'https://www.helpguide.org/'
     }
 ];
-
 // ════════════════════════════════════════════
-//  HELPER: all cards combined
-// ════════════════════════════════════════════
-const allCards = [...statsCards, ...resourceCards];
-function findCard(id) { return allCards.find(c => c.id === id); }
-
-// ════════════════════════════════════════════
-//  STATE
-// ════════════════════════════════════════════
-let currentUser     = null;   // username string or null
-let currentCardData = null;   // card object currently shown in detail modal
-
-// ════════════════════════════════════════════
-//  DOM REFS
-// ════════════════════════════════════════════
-const authNavBtn        = document.getElementById('auth-nav-btn');
-const bookmarksNavBtn   = document.getElementById('bookmarks-nav-btn');
-
-const authModal         = document.getElementById('auth-modal');
-const authCloseBtn      = document.getElementById('auth-close-btn');
-const authSigninView    = document.getElementById('auth-signin-view');
-const authManageView    = document.getElementById('auth-manage-view');
-const usernameInput     = document.getElementById('username');
-const emailInput        = document.getElementById('email');
-const passwordInput     = document.getElementById('password');
-const emailConsentChk   = document.getElementById('email-consent');
-const authError         = document.getElementById('auth-error');
-const loginBtn          = document.getElementById('login-btn');
-const manageGreeting    = document.getElementById('manage-greeting');
-const manageConsentChk  = document.getElementById('manage-email-consent');
-const savePrefsBtn      = document.getElementById('save-prefs-btn');
-const logoutBtn         = document.getElementById('logout-btn');
-
-const bookmarksModal    = document.getElementById('bookmarks-modal');
-const bmCloseBtn        = document.getElementById('bm-close-btn');
-const bookmarksList     = document.getElementById('bookmarks-list');
-
-const cardModal         = document.getElementById('card-modal');
-const cardCloseBtn      = document.getElementById('card-close-btn');
-const cmIcon            = document.getElementById('cm-icon');
-const cmTitle           = document.getElementById('cm-title');
-const cmDescription     = document.getElementById('cm-description');
-const cmSummary         = document.getElementById('cm-summary');
-const cmSourceBtn       = document.getElementById('cm-source-btn');
-const cmBookmarkBtn     = document.getElementById('cm-bookmark-btn');
-const cmEmailBtn        = document.getElementById('cm-email-btn');
-const cmEmailStatus     = document.getElementById('cm-email-status');
-
-const toast             = document.getElementById('toast');
-const toastMsg          = document.getElementById('toast-msg');
-
-// ════════════════════════════════════════════
-//  INIT
+//  CORE INITIALIZATION
 // ════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', () => {
+    initApp();
+});
+
+async function initApp() {
     renderAllCards();
-    checkLoginState();
-});
-
-// ════════════════════════════════════════════
-//  CARD RENDERING
-// ════════════════════════════════════════════
-function createCard(card) {
-    const div = document.createElement('div');
-    div.className = 'card';
-    div.dataset.id = card.id;
-    div.setAttribute('role', 'button');
-    div.setAttribute('tabindex', '0');
-
-    div.innerHTML = `
-        <div class="card-visual">${card.icon}</div>
-        <h3>${card.title}</h3>
-        <p>${card.description}</p>
-        <div class="card-actions">
-            <span class="card-expand-hint">Click to learn more ↗</span>
-            <button class="bookmark-btn" aria-label="Bookmark ${card.title}">Bookmark</button>
-        </div>
-    `;
-
-    // Open detail modal on card click (anywhere except bookmark button)
-    div.addEventListener('click', (e) => {
-        if (e.target.classList.contains('bookmark-btn')) return;
-        openCardModal(card);
-    });
-    div.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ' ') openCardModal(card);
-    });
-
-    // Bookmark button
-    div.querySelector('.bookmark-btn').addEventListener('click', (e) => {
-        e.stopPropagation();
-        handleBookmarkToggle(card.id, card.title, card.description);
-    });
-
-    return div;
-}
-
-function renderAllCards() {
-    const statsGrid     = document.getElementById('stats-grid');
-    const resourcesGrid = document.getElementById('resources-grid');
-    statsCards.forEach(c => statsGrid.appendChild(createCard(c)));
-    resourceCards.forEach(c => resourcesGrid.appendChild(createCard(c)));
-    updateBookmarkButtons();
+    await checkLoginState();
+    setupEventListeners();
 }
 
 // ════════════════════════════════════════════
-//  CARD DETAIL MODAL
+//  DATABASE & AUTH FUNCTIONS
 // ════════════════════════════════════════════
-function openCardModal(card) {
-    currentCardData = card;
 
-    cmIcon.textContent        = card.icon;
-    cmTitle.textContent       = card.title;
-    cmDescription.textContent = card.description;
-    cmSummary.textContent     = card.summary;
-    cmSourceBtn.href          = card.source;
-
-    refreshCardModalBookmarkBtn();
-    refreshCardModalEmailBtn();
-
-    cmEmailStatus.textContent = '';
-    cmEmailStatus.classList.add('hidden');
-    cmEmailStatus.className = 'cm-email-status hidden';
-
-    cardModal.style.display = 'flex';
-    document.body.style.overflow = 'hidden';
-}
-
-function closeCardModal() {
-    cardModal.style.display  = 'none';
-    document.body.style.overflow = '';
-    currentCardData = null;
-}
-
-function refreshCardModalBookmarkBtn() {
-    if (!currentCardData) return;
-    const saved = isBookmarked(currentCardData.id);
-    cmBookmarkBtn.textContent = saved ? '✓ Saved' : 'Bookmark';
-    cmBookmarkBtn.classList.toggle('bookmarked', saved);
-}
-
-function refreshCardModalEmailBtn() {
-    if (!currentCardData) return;
-    const userData = currentUser ? getUserData(currentUser) : null;
-    const consented = userData && userData.emailConsent;
-    cmEmailBtn.classList.toggle('hidden', !consented);
-}
-
-cardCloseBtn.addEventListener('click', closeCardModal);
-cardModal.addEventListener('click', (e) => { if (e.target === cardModal) closeCardModal(); });
-
-// Bookmark from within card modal
-cmBookmarkBtn.addEventListener('click', () => {
-    if (!currentCardData) return;
-    handleBookmarkToggle(currentCardData.id, currentCardData.title, currentCardData.description);
-    refreshCardModalBookmarkBtn();
-});
-
-// Email from within card modal
-cmEmailBtn.addEventListener('click', () => {
-    if (!currentCardData || !currentUser) return;
-    const userData = getUserData(currentUser);
-    if (!userData || !userData.emailConsent) return;
-
-    sendCardByEmail(currentUser, userData.email, currentCardData);
-});
-
-// ════════════════════════════════════════════
-//  AUTH MODAL
-// ════════════════════════════════════════════
-authNavBtn.addEventListener('click', (e) => {
-    e.preventDefault();
-    clearAuthError();
-    authModal.style.display = 'flex';
-    document.body.style.overflow = 'hidden';
-});
-
-authCloseBtn.addEventListener('click', closeAuthModal);
-authModal.addEventListener('click', (e) => { if (e.target === authModal) closeAuthModal(); });
-
-function closeAuthModal() {
-    authModal.style.display = 'none';
-    document.body.style.overflow = '';
-}
-
-// ── Login / Register ──
-loginBtn.addEventListener('click', async () => {
-    const email = emailInput.value.trim();
-    const pass = passwordInput.value;
-
-    // Supabase Auth handles the session for you
-    const { data, error } = await supabase.auth.signInWithPassword({
-        email: email,
-        password: pass,
-    });
-
-    if (error) {
-        // If login fails, try signing them up as a new user
-        const { error: signUpError } = await supabase.auth.signUp({ email, password: pass });
-        if (signUpError) return showAuthError(signUpError.message);
-        alert("Check your email for a confirmation link!");
-    }
-    
-    checkLoginState();
-    closeAuthModal();
-});
-
-// ── Manage preferences (logged-in view) ──
-savePrefsBtn.addEventListener('click', () => {
-    if (!currentUser) return;
-    const userData = getUserData(currentUser);
-    userData.emailConsent = manageConsentChk.checked;
-    saveUserData(currentUser, userData);
-    showToast('Preference saved!');
-    refreshCardModalEmailBtn();
-});
-
-// ── Logout ──
-logoutBtn.addEventListener('click', () => {
-    localStorage.removeItem('currentUser');
-    checkLoginState();
-    closeAuthModal();
-});
-
-// ════════════════════════════════════════════
-//  LOGIN STATE
-// ════════════════════════════════════════════
 async function checkLoginState() {
     const { data: { user } } = await supabase.auth.getUser();
-    currentUser = user; // Store the user object instead of a string
+    currentUser = user;
+
+    const authNavBtn = document.getElementById('auth-nav-btn');
+    const bookmarksNavBtn = document.getElementById('bookmarks-nav-btn');
+    const authSigninView = document.getElementById('auth-signin-view');
+    const authManageView = document.getElementById('auth-manage-view');
 
     if (currentUser) {
-        authNavBtn.textContent = `Hello, ${currentUser.email}`;
+        authNavBtn.textContent = `Hello, ${currentUser.email.split('@')[0]}`;
         bookmarksNavBtn.classList.remove('hidden');
-        // ... rest of your UI toggle logic
-    }
-}
-        // Switch modal to manage view
         authSigninView.classList.add('hidden');
         authManageView.classList.remove('hidden');
-
-        const userData = getUserData(currentUser);
-        manageGreeting.textContent = `Signed in as ${currentUser}${userData ? ' · ' + userData.email : ''}`;
-        manageConsentChk.checked = userData ? !!userData.emailConsent : false;
-
-        // Update "You are not alone" text
-        document.getElementById('alone-subtitle').innerHTML =
-            `You are not alone, <strong>${currentUser}</strong>. Here is what the data says.`;
+        document.getElementById('manage-greeting').textContent = `Signed in as ${currentUser.email}`;
     } else {
         authNavBtn.textContent = 'Sign In / Register';
         bookmarksNavBtn.classList.add('hidden');
-
         authSigninView.classList.remove('hidden');
         authManageView.classList.add('hidden');
-
-        usernameInput.value = '';
-        emailInput.value = '';
-        passwordInput.value = '';
-        emailConsentChk.checked = false;
-
-        document.getElementById('alone-subtitle').textContent =
-            'You are not alone. Here is what the data says.';
     }
-
     updateBookmarkButtons();
-    refreshCardModalBookmarkBtn();
-    refreshCardModalEmailBtn();
 }
 
-// ════════════════════════════════════════════
-//  BOOKMARKS MODAL
-// ════════════════════════════════════════════
-bookmarksNavBtn.addEventListener('click', (e) => {
-    e.preventDefault();
-    renderBookmarks();
-    bookmarksModal.style.display = 'flex';
-    document.body.style.overflow = 'hidden';
-});
+async function handleAuth() {
+    const email = document.getElementById('email-input').value.trim();
+    const password = document.getElementById('password-input').value;
 
-bmCloseBtn.addEventListener('click', closeBookmarksModal);
-bookmarksModal.addEventListener('click', (e) => { if (e.target === bookmarksModal) closeBookmarksModal(); });
+    if (!email || !password) return alert("Please fill in all fields.");
 
-function closeBookmarksModal() {
-    bookmarksModal.style.display = 'none';
-    document.body.style.overflow = '';
-}
+    // Attempt Sign In
+    let { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
-function renderBookmarks() {
-    if (!currentUser) return;
-    const bookmarks = getBookmarks();
-    bookmarksList.innerHTML = '';
-
-    if (bookmarks.length === 0) {
-        bookmarksList.innerHTML = '<p class="bm-empty">You haven\'t saved anything yet.</p>';
-        return;
+    if (error) {
+        // If login fails, attempt Sign Up
+        const { error: signUpError } = await supabase.auth.signUp({ email, password });
+        if (signUpError) return alert(signUpError.message);
+        alert("Success! Check your email for a confirmation link.");
     }
 
-    bookmarks.forEach(bm => {
-        const card = findCard(bm.id);
-        const div = document.createElement('div');
-        div.className = 'bookmark-item';
-        div.setAttribute('role', 'button');
-        div.setAttribute('tabindex', '0');
-        div.title = 'Click to open full details';
-
-        div.innerHTML = `
-            <div class="bm-row">
-                <span class="bm-icon">${card ? card.icon : '📌'}</span>
-                <div class="bm-text">
-                    <h4>${bm.title}</h4>
-                    <p>${bm.description}</p>
-                </div>
-                <span class="bm-arrow">›</span>
-            </div>
-        `;
-
-        // Clicking a bookmark item opens the card detail modal
-        const clickHandler = () => {
-            if (card) {
-                closeBookmarksModal();
-                // Small delay so bookmarks modal fully closes first
-                setTimeout(() => openCardModal(card), 80);
-            }
-        };
-        div.addEventListener('click', clickHandler);
-        div.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' || e.key === ' ') clickHandler();
-        });
-
-        bookmarksList.appendChild(div);
-    });
+    checkLoginState();
+    closeModal('auth-modal');
 }
 
-// ════════════════════════════════════════════
-//  BOOKMARKING LOGIC
-// ════════════════════════════════════════════
-function handleBookmarkToggle(id, title, description) {
+async function toggleBookmark(cardId) {
     if (!currentUser) {
-        closeCardModal();
-        authModal.style.display = 'flex';
-        document.body.style.overflow = 'hidden';
+        openModal('auth-modal');
         return;
     }
-    const bookmarks = getBookmarks();
-    const idx = bookmarks.findIndex(bm => bm.id === id);
-    if (idx > -1) {
-        bookmarks.splice(idx, 1);
-        showToast('Bookmark removed.');
+
+    const { data: existing } = await supabase
+        .from('bookmarks')
+        .select('*')
+        .eq('user_id', currentUser.id)
+        .eq('card_id', cardId)
+        .single();
+
+    if (existing) {
+        await supabase.from('bookmarks').delete().eq('id', existing.id);
     } else {
-        bookmarks.push({ id, title, description });
-        showToast('Bookmarked!');
+        await supabase.from('bookmarks').insert([
+            { user_id: currentUser.id, card_id: cardId }
+        ]);
     }
-    saveBookmarks(bookmarks);
     updateBookmarkButtons();
-    if (bookmarksModal.style.display === 'flex') renderBookmarks();
 }
 
-function isBookmarked(id) {
-    if (!currentUser) return false;
-    return getBookmarks().some(bm => bm.id === id);
-}
+async function updateBookmarkButtons() {
+    const { data: bookmarks } = currentUser ? 
+        await supabase.from('bookmarks').select('card_id').eq('user_id', currentUser.id) : 
+        { data: [] };
 
-function updateBookmarkButtons() {
-    document.querySelectorAll('.card').forEach(cardEl => {
-        const id  = cardEl.dataset.id;
-        const btn = cardEl.querySelector('.bookmark-btn');
-        if (!btn) return;
+    const savedIds = new Set((bookmarks || []).map(b => b.card_id));
 
-        if (!currentUser) {
-            btn.textContent = 'Sign in to save';
-            btn.classList.remove('bookmarked');
+    document.querySelectorAll('.bookmark-btn').forEach(btn => {
+        const id = btn.getAttribute('data-id');
+        if (savedIds.has(id)) {
+            btn.classList.add('active');
+            btn.innerHTML = '★ Saved';
         } else {
-            const saved = isBookmarked(id);
-            btn.textContent = saved ? '✓ Saved' : 'Bookmark';
-            btn.classList.toggle('bookmarked', saved);
+            btn.classList.remove('active');
+            btn.innerHTML = '☆ Bookmark';
         }
     });
 }
 
-// ════════════════════════════════════════════
-//  EMAIL FEATURE
-//  We use mailto: since this is a static site
-//  with no backend. The user's own email client
-//  opens pre-filled with the card content.
-// ════════════════════════════════════════════
-function sendCardByEmail(username, userEmail, card) {
-    const subject = encodeURIComponent(`Pathfinder Resource: ${card.title}`);
-    const body = encodeURIComponent(
-`Hi ${username},
-
-Here is a resource you requested from Pathfinder:
-
-━━━━━━━━━━━━━━━━━━━━━━
-${card.icon}  ${card.title}
-━━━━━━━━━━━━━━━━━━━━━━
-
-${card.description}
-
-SUMMARY
-──────────────────────
-${card.summary}
-
-FULL SOURCE
-──────────────────────
-${card.source}
-
-━━━━━━━━━━━━━━━━━━━━━━
-Sent via Pathfinder Mental Health Resources
-`
-    );
-
-    const mailto = `mailto:${userEmail}?subject=${subject}&body=${body}`;
-
-    // Open mailto link
-    const a = document.createElement('a');
-    a.href = mailto;
-    a.style.display = 'none';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-
-    // Show status inside modal
-    cmEmailStatus.textContent = '✓ Your email client has been opened with this card\'s details.';
-    cmEmailStatus.className = 'cm-email-status success';
+async function handleLogout() {
+    await supabase.auth.signOut();
+    location.reload(); // Refresh to clear state safely
 }
 
 // ════════════════════════════════════════════
-//  TOAST
+//  UI HELPERS (Keep your existing Modal & Render functions)
 // ════════════════════════════════════════════
-let toastTimer = null;
-function showToast(msg) {
-    toastMsg.textContent = msg;
-    toast.classList.remove('hidden');
-    toast.classList.add('show');
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => {
-        toast.classList.remove('show');
-        setTimeout(() => toast.classList.add('hidden'), 400);
-    }, 2400);
+function renderAllCards() {
+    // ... Use your existing logic to loop through statsCards and resourceCards ...
+    // Just ensure the bookmark button in your template has data-id="${card.id}"
 }
-
-// ════════════════════════════════════════════
-//  LOCAL STORAGE HELPERS
-// ════════════════════════════════════════════
-async function getBookmarks() {
-    const { data, error } = await supabase
-        .from('bookmarks')
-        .select('*');
-    return data || [];
-}
-
-async function handleBookmarkToggle(id, title, description) {
-    const bookmarks = await getBookmarks();
-    const isSaved = bookmarks.find(bm => bm.card_id === id);
-
-    if (isSaved) {
-        await supabase.from('bookmarks').delete().eq('card_id', id);
-    } else {
-        await supabase.from('bookmarks').insert([{ card_id: id, title, description }]);
-    }
-    updateBookmarkButtons();
-}
-
-// ════════════════════════════════════════════
-//  AUTH ERROR HELPERS
-// ════════════════════════════════════════════
-function showAuthError(msg) {
-    authError.textContent = msg;
-    authError.classList.remove('hidden');
-}
-function clearAuthError() {
-    authError.textContent = '';
-    authError.classList.add('hidden');
-}
+  
