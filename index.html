@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pathfinder | Mental Health Resources</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <div class="logo">Pathfinder</div>
+        <nav>
+            <a href="#statistics">Understand</a>
+            <a href="#resources">Explore Resources</a>
+            <a href="#" id="auth-nav-btn">Sign In / Register</a>
+            <a href="#" id="bookmarks-nav-btn" class="hidden">My Bookmarks</a>
+        </nav>
+    </header>
+
+    <main>
+        <section class="hero">
+            <h1>Explore at your own pace.</h1>
+            <p>Information and resources for your mental well-being, gathered in one place. No pressure, just options.</p>
+        </section>
+
+        <section id="statistics" class="content-section">
+            <h2>Understanding Mental Health</h2>
+            <p class="subtitle" id="alone-text">You are not alone. Here is what the data says.</p>
+            <div class="card-grid" id="stats-grid"></div>
+        </section>
+
+        <section id="resources" class="content-section">
+            <h2>Available Resources</h2>
+            <p class="subtitle">Different paths for different needs. Explore what feels right.</p>
+            <div class="card-grid" id="resources-grid"></div>
+        </section>
+    </main>
+
+    <!-- Auth Modal -->
+    <div id="auth-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn">&times;</span>
+            <h2 id="auth-title">Create Account or Sign In</h2>
+            <p id="auth-subtitle">Save information to review later on your own terms.</p>
+
+            <div id="auth-fields">
+                <input type="text" id="username" placeholder="Username" autocomplete="username">
+                <input type="email" id="email" placeholder="Email address" autocomplete="email">
+                <input type="password" id="password" placeholder="Password" autocomplete="current-password">
+                <p id="auth-error" class="auth-error hidden"></p>
+                <button id="login-btn">Continue</button>
+            </div>
+
+            <div id="manage-account" class="hidden">
+                <p id="manage-user-info"></p>
+                <button id="logout-btn">Sign Out</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bookmarks Modal -->
+    <div id="bookmarks-modal" class="modal">
+        <div class="modal-content bookmarks-modal-content">
+            <span class="close-btn-bm">&times;</span>
+            <h2>Your Saved Items</h2>
+            <div id="bookmarks-list"></div>
+        </div>
+    </div>
+
+    <!-- Card Detail Modal -->
+    <div id="card-modal" class="modal">
+        <div class="modal-content card-modal-content">
+            <span class="close-btn-card">&times;</span>
+            <div id="card-modal-icon" class="card-modal-icon"></div>
+            <h2 id="card-modal-title"></h2>
+            <p id="card-modal-description"></p>
+            <hr class="modal-divider">
+            <h3 class="summary-heading">Summary</h3>
+            <p id="card-modal-summary"></p>
+            <div class="card-modal-actions">
+                <a id="card-modal-source" href="#" target="_blank" rel="noopener noreferrer" class="source-btn modal-source-btn">View Full Source ↗</a>
+                <button id="card-modal-bookmark-btn" class="bookmark-btn">Bookmark</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

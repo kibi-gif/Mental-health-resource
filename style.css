@@ -1,0 +1,540 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap');
+
+:root {
+    --primary-bg: #f7f9f7;
+    --text-main: #2c3e2e;
+    --text-muted: #5b705e;
+    --accent-color: #8fb996;
+    --accent-hover: #6fa076;
+    --card-bg: #ffffff;
+    --shadow-sm: 0 2px 12px rgba(44, 62, 46, 0.07);
+    --shadow-md: 0 8px 30px rgba(44, 62, 46, 0.11);
+    --shadow-lg: 0 20px 60px rgba(44, 62, 46, 0.18);
+    --border-radius: 14px;
+    --font-display: 'DM Serif Display', Georgia, serif;
+    --font-body: 'DM Sans', 'Segoe UI', Tahoma, sans-serif;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: var(--primary-bg);
+    color: var(--text-main);
+    line-height: 1.65;
+    font-family: var(--font-body);
+    font-size: 15px;
+}
+
+/* ── Header & Nav ── */
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.2rem 5%;
+    background-color: var(--card-bg);
+    box-shadow: var(--shadow-sm);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.logo {
+    font-family: var(--font-display);
+    font-size: 1.55rem;
+    color: var(--accent-color);
+    letter-spacing: 0.01em;
+}
+
+nav {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.2rem;
+}
+
+nav a {
+    text-decoration: none;
+    color: var(--text-main);
+    margin-left: 1.2rem;
+    font-weight: 500;
+    font-size: 0.9rem;
+    padding: 0.4rem 0.7rem;
+    border-radius: 6px;
+    transition: color 0.2s, background 0.2s;
+}
+
+nav a:hover {
+    color: var(--accent-color);
+    background: rgba(143, 185, 150, 0.1);
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* ── Hero ── */
+.hero {
+    text-align: center;
+    padding: 6rem 2rem 5rem;
+    background: linear-gradient(150deg, #deeee1 0%, #f0f7f1 50%, #f7f9f7 100%);
+    position: relative;
+    overflow: hidden;
+}
+
+.hero::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 320px; height: 320px;
+    background: radial-gradient(circle, rgba(143,185,150,0.18) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.hero h1 {
+    font-family: var(--font-display);
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    letter-spacing: -0.01em;
+    line-height: 1.15;
+    color: var(--text-main);
+}
+
+.hero p {
+    font-size: 1.15rem;
+    color: var(--text-muted);
+    max-width: 560px;
+    margin: 0 auto;
+    font-weight: 300;
+}
+
+/* ── Content Sections ── */
+.content-section {
+    padding: 4.5rem 5%;
+}
+
+.content-section:nth-child(even) {
+    background: rgba(143, 185, 150, 0.04);
+}
+
+.content-section h2 {
+    text-align: center;
+    font-family: var(--font-display);
+    font-size: 2.1rem;
+    margin-bottom: 0.5rem;
+    color: var(--text-main);
+}
+
+.subtitle {
+    text-align: center;
+    color: var(--text-muted);
+    margin-bottom: 3rem;
+    font-size: 1rem;
+}
+
+/* ── Cards ── */
+.card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+    gap: 1.75rem;
+}
+
+.card {
+    background: var(--card-bg);
+    padding: 2rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-sm);
+    border: 1.5px solid transparent;
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+    display: flex;
+    flex-direction: column;
+    cursor: pointer;
+}
+
+.card:hover {
+    transform: translateY(-6px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--accent-color);
+}
+
+.card-visual {
+    font-size: 2.4rem;
+    margin-bottom: 0.85rem;
+}
+
+.card h3 {
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    margin-bottom: 0.65rem;
+    color: var(--text-main);
+}
+
+.card p {
+    color: var(--text-muted);
+    margin-bottom: 1.4rem;
+    flex-grow: 1;
+    font-size: 0.93rem;
+    line-height: 1.6;
+}
+
+.card-actions {
+    display: flex;
+    gap: 0.6rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+/* ── Buttons ── */
+button {
+    font-family: var(--font-body);
+    background-color: var(--accent-color);
+    color: white;
+    border: none;
+    padding: 0.7rem 1.4rem;
+    border-radius: 7px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.88rem;
+    transition: background-color 0.2s, transform 0.15s;
+    letter-spacing: 0.01em;
+}
+
+button:hover {
+    background-color: var(--accent-hover);
+    transform: translateY(-1px);
+}
+
+button:active {
+    transform: translateY(0);
+}
+
+button.bookmarked {
+    background-color: #b0c4b4;
+    color: var(--text-main);
+}
+
+.bookmark-btn {
+    padding: 0.55rem 1rem;
+    font-size: 0.85rem;
+    background-color: transparent;
+    color: var(--text-muted);
+    border: 1.5px solid #c8d9ca;
+    font-weight: 500;
+}
+
+.bookmark-btn:hover {
+    background-color: rgba(143, 185, 150, 0.12);
+    border-color: var(--accent-color);
+    color: var(--accent-hover);
+    transform: none;
+}
+
+.bookmark-btn.bookmarked {
+    background-color: rgba(143, 185, 150, 0.15);
+    border-color: var(--accent-color);
+    color: var(--accent-hover);
+    font-weight: 600;
+}
+
+/* Source link styled as button */
+.source-btn {
+    display: inline-block;
+    text-decoration: none;
+    background-color: transparent;
+    color: var(--accent-color);
+    border: 1.5px solid var(--accent-color);
+    padding: 0.55rem 1rem;
+    border-radius: 7px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    transition: background-color 0.2s, color 0.2s;
+    cursor: pointer;
+    font-family: var(--font-body);
+    letter-spacing: 0.01em;
+}
+
+.source-btn:hover {
+    background-color: var(--accent-color);
+    color: white;
+}
+
+/* ── Modals (shared base) ── */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(30, 45, 32, 0.45);
+    backdrop-filter: blur(4px);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+}
+
+.modal-content {
+    background: var(--card-bg);
+    padding: 2.8rem;
+    border-radius: 18px;
+    width: 90%;
+    max-width: 420px;
+    position: relative;
+    text-align: center;
+    box-shadow: var(--shadow-lg);
+    animation: modalIn 0.22s ease;
+}
+
+@keyframes modalIn {
+    from { opacity: 0; transform: translateY(18px) scale(0.97); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Close buttons */
+.close-btn, .close-btn-bm, .close-btn-card {
+    position: absolute;
+    top: 1.1rem; right: 1.4rem;
+    font-size: 1.4rem;
+    cursor: pointer;
+    color: var(--text-muted);
+    line-height: 1;
+    transition: color 0.2s;
+    background: none;
+    border: none;
+    padding: 0;
+    font-weight: 300;
+}
+
+.close-btn:hover, .close-btn-bm:hover, .close-btn-card:hover {
+    color: var(--text-main);
+    transform: none;
+    background: none;
+}
+
+/* ── Auth Modal ── */
+#auth-modal .modal-content h2 {
+    font-family: var(--font-display);
+    font-size: 1.45rem;
+    margin-bottom: 0.4rem;
+}
+
+#auth-modal .modal-content p {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin-bottom: 1.4rem;
+}
+
+#auth-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"] {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1.5px solid #d5e4d7;
+    border-radius: 8px;
+    font-family: var(--font-body);
+    font-size: 0.93rem;
+    color: var(--text-main);
+    background: var(--primary-bg);
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px rgba(143, 185, 150, 0.18);
+}
+
+#auth-fields button {
+    margin-top: 0.3rem;
+    width: 100%;
+    padding: 0.8rem;
+    font-size: 0.95rem;
+}
+
+.auth-error {
+    color: #c0392b;
+    font-size: 0.85rem;
+    background: #fdf0ef;
+    border: 1px solid #e8c4c0;
+    border-radius: 6px;
+    padding: 0.55rem 0.9rem;
+    text-align: left;
+    margin: 0;
+}
+
+#manage-account {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.2rem;
+    padding-top: 0.5rem;
+}
+
+#manage-user-info {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    font-style: italic;
+}
+
+#logout-btn {
+    background-color: transparent;
+    color: var(--text-muted);
+    border: 1.5px solid #c8d9ca;
+    padding: 0.65rem 1.8rem;
+    font-size: 0.88rem;
+}
+
+#logout-btn:hover {
+    background-color: #fdf0ef;
+    border-color: #e0a8a8;
+    color: #c0392b;
+    transform: none;
+}
+
+/* ── Bookmarks Modal ── */
+.bookmarks-modal-content {
+    max-width: 520px;
+    text-align: left;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.bookmarks-modal-content h2 {
+    font-family: var(--font-display);
+    font-size: 1.45rem;
+    margin-bottom: 1.4rem;
+    padding-right: 2rem;
+}
+
+.no-bookmarks {
+    color: var(--text-muted);
+    font-style: italic;
+    text-align: center;
+    padding: 1.5rem 0;
+}
+
+.bookmark-item {
+    padding: 1.1rem 0;
+    border-bottom: 1px solid #eef2ee;
+}
+
+.bookmark-item:last-child {
+    border-bottom: none;
+}
+
+.bookmark-item-header {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    margin-bottom: 0.4rem;
+}
+
+.bookmark-icon {
+    font-size: 1.3rem;
+    flex-shrink: 0;
+}
+
+.bookmark-item h4 {
+    font-family: var(--font-display);
+    font-size: 1rem;
+    color: var(--text-main);
+}
+
+.bookmark-item p {
+    font-size: 0.88rem;
+    color: var(--text-muted);
+    margin-bottom: 0.75rem;
+    margin-left: 1.95rem;
+    line-height: 1.5;
+}
+
+.open-from-bookmark {
+    margin-left: 1.95rem;
+    padding: 0.45rem 0.9rem;
+    font-size: 0.83rem;
+}
+
+/* ── Card Detail Modal ── */
+.card-modal-content {
+    max-width: 580px;
+    text-align: left;
+    max-height: 88vh;
+    overflow-y: auto;
+    padding: 2.5rem;
+}
+
+.card-modal-icon {
+    font-size: 2.8rem;
+    margin-bottom: 0.9rem;
+    line-height: 1;
+}
+
+.card-modal-content h2 {
+    font-family: var(--font-display);
+    font-size: 1.7rem;
+    margin-bottom: 0.75rem;
+    line-height: 1.2;
+    color: var(--text-main);
+    padding-right: 2rem;
+}
+
+#card-modal-description {
+    color: var(--text-muted);
+    font-size: 0.97rem;
+    margin-bottom: 1.5rem;
+    line-height: 1.65;
+    font-style: italic;
+}
+
+.modal-divider {
+    border: none;
+    border-top: 1.5px solid #e8f0e9;
+    margin-bottom: 1.3rem;
+}
+
+.summary-heading {
+    font-family: var(--font-display);
+    font-size: 1rem;
+    color: var(--accent-hover);
+    margin-bottom: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-style: italic;
+}
+
+#card-modal-summary {
+    color: var(--text-main);
+    font-size: 0.96rem;
+    line-height: 1.75;
+    margin-bottom: 2rem;
+}
+
+.card-modal-actions {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    align-items: center;
+    padding-top: 0.5rem;
+    border-top: 1.5px solid #e8f0e9;
+}
+
+.modal-source-btn {
+    font-size: 0.9rem;
+    padding: 0.65rem 1.3rem;
+}
+
+.card-modal-actions .bookmark-btn {
+    padding: 0.65rem 1.3rem;
+    font-size: 0.9rem;
+}
