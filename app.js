@@ -302,40 +302,23 @@ function closeAuthModal() {
 }
 
 // ── Login / Register ──
-loginBtn.addEventListener('click', () => {
-    clearAuthError();
-    const user  = usernameInput.value.trim();
+loginBtn.addEventListener('click', async () => {
     const email = emailInput.value.trim();
-    const pass  = passwordInput.value;
-    const consent = emailConsentChk.checked;
+    const pass = passwordInput.value;
 
-    if (!user || !email || !pass) {
-        showAuthError('Please fill in all three fields.');
-        return;
-    }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        showAuthError('Please enter a valid email address.');
-        return;
-    }
-    if (pass.length < 6) {
-        showAuthError('Password must be at least 6 characters.');
-        return;
-    }
+    // Supabase Auth handles the session for you
+    const { data, error } = await supabase.auth.signInWithPassword({
+        email: email,
+        password: pass,
+    });
 
-    const existing = getUserData(user);
-    if (existing) {
-        // Returning user — validate password
-        if (existing.password !== pass) {
-            showAuthError('Incorrect password for that username.');
-            return;
-        }
-    } else {
-        // New user — register
-        saveUserData(user, { email, password: pass, emailConsent: consent });
-        localStorage.setItem(`bookmarks_${user}`, JSON.stringify([]));
+    if (error) {
+        // If login fails, try signing them up as a new user
+        const { error: signUpError } = await supabase.auth.signUp({ email, password: pass });
+        if (signUpError) return showAuthError(signUpError.message);
+        alert("Check your email for a confirmation link!");
     }
-
-    localStorage.setItem('currentUser', user);
+    
     checkLoginState();
     closeAuthModal();
 });
@@ -360,13 +343,16 @@ logoutBtn.addEventListener('click', () => {
 // ════════════════════════════════════════════
 //  LOGIN STATE
 // ════════════════════════════════════════════
-function checkLoginState() {
-    currentUser = localStorage.getItem('currentUser');
+async function checkLoginState() {
+    const { data: { user } } = await supabase.auth.getUser();
+    currentUser = user; // Store the user object instead of a string
 
     if (currentUser) {
-        authNavBtn.textContent = `Hello, ${currentUser}`;
+        authNavBtn.textContent = `Hello, ${currentUser.email}`;
         bookmarksNavBtn.classList.remove('hidden');
-
+        // ... rest of your UI toggle logic
+    }
+}
         // Switch modal to manage view
         authSigninView.classList.add('hidden');
         authManageView.classList.remove('hidden');
@@ -574,10 +560,24 @@ function showToast(msg) {
 // ════════════════════════════════════════════
 //  LOCAL STORAGE HELPERS
 // ════════════════════════════════════════════
-function getUserData(username)         { return JSON.parse(localStorage.getItem(`user_${username}`)) || null; }
-function saveUserData(username, data)  { localStorage.setItem(`user_${username}`, JSON.stringify(data)); }
-function getBookmarks()                { return JSON.parse(localStorage.getItem(`bookmarks_${currentUser}`)) || []; }
-function saveBookmarks(bms)            { localStorage.setItem(`bookmarks_${currentUser}`, JSON.stringify(bms)); }
+async function getBookmarks() {
+    const { data, error } = await supabase
+        .from('bookmarks')
+        .select('*');
+    return data || [];
+}
+
+async function handleBookmarkToggle(id, title, description) {
+    const bookmarks = await getBookmarks();
+    const isSaved = bookmarks.find(bm => bm.card_id === id);
+
+    if (isSaved) {
+        await supabase.from('bookmarks').delete().eq('card_id', id);
+    } else {
+        await supabase.from('bookmarks').insert([{ card_id: id, title, description }]);
+    }
+    updateBookmarkButtons();
+}
 
 // ════════════════════════════════════════════
 //  AUTH ERROR HELPERS
