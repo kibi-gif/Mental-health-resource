@@ -241,9 +241,9 @@ function renderAllCards() {
     if (statsGrid) {
         statsGrid.innerHTML = statsCards.map(card => `
             <div class="card stat-card">
-                <span class="category">${card.category}</span>
+                <span class="category">${card.Icon}</span>
                 <h3>${card.title}</h3>
-                <div class="big-stat">${card.stat}</div>
+                <div class="big-stat">${card.summary}</div>
                 <p>${card.description}</p>
                 <div class="card-footer">
                     <span class="source">${card.source}</span>
@@ -256,7 +256,7 @@ function renderAllCards() {
     if (resourceGrid) {
         resourceGrid.innerHTML = resourceCards.map(card => `
             <div class="card resource-card">
-                <span class="category">${card.category}</span>
+                <span class="category">${card.Icon}</span>
                 <h3>${card.title}</h3>
                 <div class="phone-number">${card.phone}</div>
                 <p>${card.description}</p>
