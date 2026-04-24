@@ -121,43 +121,31 @@ const resourceCards = [
     }
 ];
 
-// 3. STATE MANAGEMENT
+// 1. DATA CONFIGURATION
+const statsCards = [
+    { id: "s1", icon: "📊", title: "Mental Health Stats", summary: "1 in 5", description: "Adults in the US experience mental illness each year.", source: "NAMI" },
+    { id: "s2", icon: "🧠", title: "Youth Impact", summary: "17%", description: "Of youth (6-17) experience a mental health disorder.", source: "CDC" }
+];
+
+const resourceCards = [
+    { id: "r1", icon: "📞", title: "988 Lifeline", source: "https://988lifeline.org", description: "24/7 free and confidential support for people in distress." },
+    { id: "r2", icon: "💬", title: "Crisis Text Line", source: "https://www.crisistextline.org", description: "Text HOME to 741741 to connect with a Crisis Counselor." }
+];
+
 let currentUser = null;
 
-// 4. INITIALIZATION
-document.addEventListener('DOMContentLoaded', async () => {
-    renderAllCards();
-    setupEventListeners();
-    await checkLoginState();
-});
-
-// 5. CORE FUNCTIONS
+// 2. AUTHENTICATION LOGIC
 async function checkLoginState() {
-    const { data: { user } } = await supabase.auth.getUser();
-    currentUser = user;
+    try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error) throw error;
 
-    const authNavBtn = document.getElementById('auth-nav-btn');
-    const bookmarksNavBtn = document.getElementById('bookmarks-nav-btn');
-    const authSigninView = document.getElementById('auth-signin-view');
-    const authManageView = document.getElementById('auth-manage-view');
-    const subtitle = document.getElementById('alone-subtitle');
-
-    if (currentUser) {
-        authNavBtn.textContent = `Hello, ${currentUser.email.split('@')[0]}`;
-        bookmarksNavBtn.classList.remove('hidden');
-        authSigninView.classList.add('hidden');
-        authManageView.classList.remove('hidden');
-        document.getElementById('manage-greeting').textContent = `Signed in as ${currentUser.email}`;
-        subtitle.innerHTML = `You are not alone, <strong>${currentUser.email.split('@')[0]}</strong>. Here is what the data says.`;
-    } else {
-        authNavBtn.textContent = 'Sign In / Register';
-        bookmarksNavBtn.classList.add('hidden');
-        authSigninView.classList.remove('hidden');
-        authManageView.classList.add('hidden');
-        subtitle.textContent = 'You are not alone. Here is what the data says.';
+        currentUser = session?.user || null;
+        updateAuthUI();
+        await updateBookmarkButtons();
+    } catch (err) {
+        console.error("Session Check Error:", err.message);
     }
-    
-    await updateBookmarkButtons();
 }
 
 async function handleAuthAction() {
@@ -165,34 +153,46 @@ async function handleAuthAction() {
     const password = document.getElementById('password-input').value;
 
     if (!email || !password) {
-        updateAuthMessage("Please enter both email and password.", "error");
+        updateAuthMessage("Fields cannot be empty.", "error");
         return;
     }
 
     try {
-        // Attempt Login
         const { data, error: loginError } = await supabase.auth.signInWithPassword({ email, password });
 
         if (loginError) {
-            // If login fails because user doesn't exist, attempt Sign Up
+            // Logic Fix: Auto-signup if user doesn't exist
             if (loginError.message.includes("Invalid login credentials")) {
-                const { error: signUpError } = await supabase.auth.signUp({ email, password });
-                
+                const { data: signUpData, error: signUpError } = await supabase.auth.signUp({ email, password });
                 if (signUpError) throw signUpError;
-                
-                alert("Account created! Please check your email for a confirmation link.");
+
+                if (signUpData.user && !signUpData.session) {
+                    alert("Account created! Please check your email to confirm your account.");
+                    closeModal('auth-modal');
+                } else {
+                    await checkLoginState();
+                    closeModal('auth-modal');
+                }
             } else {
                 throw loginError;
             }
         } else {
-            closeModal('auth-modal');
             await checkLoginState();
+            closeModal('auth-modal');
         }
     } catch (err) {
-        console.error("Auth Error:", err.message);
         updateAuthMessage(err.message, "error");
     }
 }
+
+async function handleLogout() {
+    await supabase.auth.signOut();
+    currentUser = null;
+    updateAuthUI();
+    updateBookmarkButtons();
+}
+
+// 3. BOOKMARK LOGIC
 async function toggleBookmark(cardId) {
     if (!currentUser) {
         openModal('auth-modal');
@@ -200,88 +200,105 @@ async function toggleBookmark(cardId) {
     }
 
     try {
-        // 1. Check for existing bookmark
-        const { data: existing, error: fetchError } = await supabase
+        const { data: existing } = await supabase
             .from('bookmarks')
             .select('id')
             .eq('user_id', currentUser.id)
             .eq('card_id', cardId)
-            .maybeSingle(); // Use maybeSingle to avoid 406 errors if not found
-
-        if (fetchError) throw fetchError;
+            .maybeSingle();
 
         if (existing) {
-            // 2. Delete if exists
-            const { error: deleteError } = await supabase
-                .from('bookmarks')
-                .delete()
-                .eq('id', existing.id);
-            if (deleteError) throw deleteError;
+            await supabase.from('bookmarks').delete().eq('id', existing.id);
         } else {
-            // 3. Insert if new
-            const { error: insertError } = await supabase
-                .from('bookmarks')
-                .insert([{ user_id: currentUser.id, card_id: cardId }]);
-            if (insertError) throw insertError;
+            const card = [...statsCards, ...resourceCards].find(c => c.id === cardId);
+            await supabase.from('bookmarks').insert([{
+                user_id: currentUser.id,
+                card_id: cardId,
+                title: card.title,
+                description: card.description
+            }]);
         }
-
         await updateBookmarkButtons();
     } catch (err) {
-        console.error("Database Error:", err.message);
-        alert("Failed to update bookmark. Please try again.");
-    }
-}
-// 6. UI RENDERING
-function renderAllCards() {
-    const statsGrid = document.getElementById('stats-grid');
-    const resourceGrid = document.getElementById('resource-grid');
-
-    if (statsGrid) {
-        statsGrid.innerHTML = statsCards.map(card => `
-            <div class="card stat-card">
-                <span class="category">${card.Icon}</span>
-                <h3>${card.title}</h3>
-                <div class="big-stat">${card.summary}</div>
-                <p>${card.description}</p>
-                <div class="card-footer">
-                    <span class="source">${card.source}</span>
-                    <button class="bookmark-btn" data-id="${card.id}" onclick="toggleBookmark('${card.id}')">☆ Bookmark</button>
-                </div>
-            </div>
-        `).join('');
-    }
-
-    if (resourceGrid) {
-        resourceGrid.innerHTML = resourceCards.map(card => `
-            <div class="card resource-card">
-                <span class="category">${card.Icon}</span>
-                <h3>${card.title}</h3>
-                <div class="phone-number">${card.phone}</div>
-                <p>${card.description}</p>
-                <div class="card-footer">
-                    <a href="${card.link}" class="resource-link" target="_blank">Visit Site</a>
-                    <button class="bookmark-btn" data-id="${card.id}" onclick="toggleBookmark('${card.id}')">☆ Bookmark</button>
-                </div>
-            </div>
-        `).join('');
+        console.error("Bookmark Toggle Error:", err.message);
+        alert("Action failed. Check your connection.");
     }
 }
 
-// 7. EVENT LISTENERS & MODALS
-function setupEventListeners() {
-    const loginBtn = document.getElementById('login-btn');
-    const logoutBtn = document.getElementById('logout-btn');
+async function updateBookmarkButtons() {
+    const bookmarkedIds = new Set();
+    
+    if (currentUser) {
+        const { data } = await supabase
+            .from('bookmarks')
+            .select('card_id')
+            .eq('user_id', currentUser.id);
+        data?.forEach(b => bookmarkedIds.add(b.card_id));
+    }
 
-    if (loginBtn) loginBtn.addEventListener('click', handleAuthAction);
-    if (logoutBtn) logoutBtn.addEventListener('click', async () => {
-        await supabase.auth.signOut();
-        window.location.reload();
+    document.querySelectorAll('.bookmark-btn').forEach(btn => {
+        const id = btn.getAttribute('data-id');
+        if (bookmarkedIds.has(id)) {
+            btn.innerHTML = '★ Bookmarked';
+            btn.style.color = '#f59e0b';
+        } else {
+            btn.innerHTML = '☆ Bookmark';
+            btn.style.color = '';
+        }
     });
 }
 
-// Modal Toggle Helpers
-function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
-function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
-window.openModal = openModal;
-window.closeModal = closeModal;
-window.toggleBookmark = toggleBookmark;
+// 4. UI RENDERING
+function renderAllCards() {
+    const resourceGrid = document.getElementById('resource-grid');
+    if (!resourceGrid) return;
+
+    resourceGrid.innerHTML = resourceCards.map(card => `
+        <div class="card resource-card">
+            <span class="category">${card.icon}</span>
+            <h3>${card.title}</h3>
+            <p>${card.description}</p>
+            <div class="card-footer">
+                <a href="${card.source}" class="resource-link" target="_blank">Visit Site</a>
+                <button class="bookmark-btn" data-id="${card.id}" onclick="toggleBookmark('${card.id}')">
+                    ☆ Bookmark
+                </button>
+            </div>
+        </div>
+    `).join('');
+
+    updateBookmarkButtons();
+}
+
+// 5. INITIALIZATION
+function updateAuthUI() {
+    const loginBtn = document.getElementById('login-btn');
+    const logoutBtn = document.getElementById('logout-btn');
+    if (currentUser) {
+        loginBtn?.classList.add('hidden');
+        logoutBtn?.classList.remove('hidden');
+    } else {
+        loginBtn?.classList.remove('hidden');
+        logoutBtn?.classList.add('hidden');
+    }
+}
+
+function updateAuthMessage(msg, type) {
+    const el = document.getElementById('auth-message');
+    if (el) {
+        el.textContent = msg;
+        el.style.color = type === 'error' ? '#ef4444' : '#10b981';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    renderAllCards();
+    checkLoginState();
+    
+    // Listen for auth changes globally
+    supabase.auth.onAuthStateChange((event, session) => {
+        currentUser = session?.user || null;
+        updateAuthUI();
+        updateBookmarkButtons();
+    });
+});
