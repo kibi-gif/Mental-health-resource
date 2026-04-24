@@ -165,74 +165,72 @@ async function handleAuthAction() {
     const password = document.getElementById('password-input').value;
 
     if (!email || !password) {
-        alert("Please enter both email and password.");
+        updateAuthMessage("Please enter both email and password.", "error");
         return;
     }
 
-    // Try Login
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    try {
+        // Attempt Login
+        const { data, error: loginError } = await supabase.auth.signInWithPassword({ email, password });
 
-    if (error) {
-        // If login fails, try Sign Up
-        const { error: signUpError } = await supabase.auth.signUp({ email, password });
-        if (signUpError) {
-            alert("Error: " + signUpError.message);
+        if (loginError) {
+            // If login fails because user doesn't exist, attempt Sign Up
+            if (loginError.message.includes("Invalid login credentials")) {
+                const { error: signUpError } = await supabase.auth.signUp({ email, password });
+                
+                if (signUpError) throw signUpError;
+                
+                alert("Account created! Please check your email for a confirmation link.");
+            } else {
+                throw loginError;
+            }
         } else {
-            alert("Account created! Please check your email for a confirmation link.");
+            closeModal('auth-modal');
+            await checkLoginState();
         }
-    } else {
-        closeModal('auth-modal');
-        await checkLoginState();
+    } catch (err) {
+        console.error("Auth Error:", err.message);
+        updateAuthMessage(err.message, "error");
     }
 }
-
 async function toggleBookmark(cardId) {
     if (!currentUser) {
         openModal('auth-modal');
         return;
     }
 
-    // Check if already bookmarked
-    const { data: existing } = await supabase
-        .from('bookmarks')
-        .select('*')
-        .eq('user_id', currentUser.id)
-        .eq('card_id', cardId)
-        .single();
-
-    if (existing) {
-        await supabase.from('bookmarks').delete().eq('id', existing.id);
-    } else {
-        await supabase.from('bookmarks').insert([{ user_id: currentUser.id, card_id: cardId }]);
-    }
-    
-    await updateBookmarkButtons();
-}
-
-async function updateBookmarkButtons() {
-    let savedIds = new Set();
-    
-    if (currentUser) {
-        const { data } = await supabase
+    try {
+        // 1. Check for existing bookmark
+        const { data: existing, error: fetchError } = await supabase
             .from('bookmarks')
-            .select('card_id')
-            .eq('user_id', currentUser.id);
-        
-        if (data) savedIds = new Set(data.map(b => b.card_id));
-    }
+            .select('id')
+            .eq('user_id', currentUser.id)
+            .eq('card_id', cardId)
+            .maybeSingle(); // Use maybeSingle to avoid 406 errors if not found
 
-    document.querySelectorAll('.bookmark-btn').forEach(btn => {
-        const id = btn.getAttribute('data-id');
-        if (savedIds.has(id)) {
-            btn.classList.add('active');
-            btn.innerHTML = '★ Saved';
+        if (fetchError) throw fetchError;
+
+        if (existing) {
+            // 2. Delete if exists
+            const { error: deleteError } = await supabase
+                .from('bookmarks')
+                .delete()
+                .eq('id', existing.id);
+            if (deleteError) throw deleteError;
         } else {
-            btn.classList.remove('active');
-            btn.innerHTML = '☆ Bookmark';
+            // 3. Insert if new
+            const { error: insertError } = await supabase
+                .from('bookmarks')
+                .insert([{ user_id: currentUser.id, card_id: cardId }]);
+            if (insertError) throw insertError;
         }
-    });
-}
 
+        await updateBookmarkButtons();
+    } catch (err) {
+        console.error("Database Error:", err.message);
+        alert("Failed to update bookmark. Please try again.");
+    }
+}
 // 6. UI RENDERING
 function renderAllCards() {
     const statsGrid = document.getElementById('stats-grid');
